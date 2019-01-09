@@ -1,18 +1,14 @@
 package com.example.demouser.dice_project;
 
-import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.TextureView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.ImageView;
-import android.widget.ResourceCursorAdapter;
 
 import java.util.Random;
 
@@ -21,8 +17,8 @@ public class MainActivity extends AppCompatActivity
 
     private Random rand = new Random();
     ImageView diceImageView;
-    TextView usersScore, computersScore, currentTurnsScore;
-    Button roll, hold, reset;
+    TextView usersOverallScoreTxtVw, computersScoreTxtVw, usersCurrentTurnsScoreTxtVw;
+    Button rollBtn, holdBtn, resetBtn;
     Resources res;
     Boolean yourTurn = false;
 
@@ -34,7 +30,6 @@ public class MainActivity extends AppCompatActivity
 
     private int computersTurnsScore = 0;
 
-    private int result = 0;
     private int currRoll = 0;
 
     @Override
@@ -46,43 +41,183 @@ public class MainActivity extends AppCompatActivity
 
         diceImageView = findViewById(R.id.diceImage);
 
-        usersScore = findViewById(R.id.UsersScore);
+        usersOverallScoreTxtVw = findViewById(R.id.UsersScore);
 
-        computersScore = findViewById(R.id.ComputersScore);
+        computersScoreTxtVw = findViewById(R.id.ComputersScore);
 
-        currentTurnsScore = findViewById(R.id.CurrentTurnsScore);// status
+        usersCurrentTurnsScoreTxtVw = findViewById(R.id.CurrentTurnsScore);// status
 
-        roll = findViewById(R.id.Roll);
+        rollBtn = findViewById(R.id.RollButton);
 
-        hold = findViewById(R.id.Hold);
+        holdBtn = findViewById(R.id.HoldButton);
 
-        reset = findViewById(R.id.Reset);
+        resetBtn = findViewById(R.id.ResetButton);
 
         res = getResources();
 
         // diceImageView = diceImageView.setImageDrawable(ContextCompat.getDrawable(this,R.drawable.dice1));
 
 
-        roll.setOnClickListener(new View.OnClickListener()
-        {
-            @Override
-            public void onClick(View v)
-            {
+        rollButton();
+        resetButton();
+        holdButton();
 
-//                result;
-                int currRoll;
-                currRoll = rollDie();
-                while (yourTurn)
-                {
-                    result += currRoll;
-                    currentTurnsScore.setText("Current Turn Score: " + result);
-                }
+        // just a way to use run r, we use handler because android works with this
+        //
+        usersOverallScoreTxtVw.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                final Handler handler = new Handler(); // handles an action after a certain amount of time
+
+                // this will perform an action without stopping the thread and remaining active
+                Runnable r = new Runnable() {
+                    @Override
+                    public void run() {
+                        int result = rand.nextInt(1000);
+                        usersOverallScoreTxtVw.setText(Integer.toString(rand.nextInt(100))); // updates the user's score each time it's clicked
+
+                        if (result > 100) {
+                            handler.postDelayed(this, 1000);
+                        }
+
+                    }
+                };
+                handler.postDelayed(r,1000); // calls handler function to delay action for a few seconds
             }
         });
 
     }
 
-        private int rollDie()
+    private void rollButton() {
+
+        rollBtn.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+
+
+                int currRoll; // current roll variable
+
+                currRoll = rollDie(); // roll die method is saved to current roll since it returns an int value
+
+                // if the current roll does not equal 1
+                if (currRoll != 1)
+                {
+                    usersTurnScore += currRoll; // adds the result of the dice rolled to the current roll's score
+                    usersCurrentTurnsScoreTxtVw.setText("User's Current Turn Score: " + usersTurnScore);
+                }
+
+                else
+                {
+                    usersTurnScore = 0; // sets result to zero if the user rolls a one
+
+                    usersCurrentTurnsScoreTxtVw.setText("User's Current Turn Score: " + usersTurnScore); // resets the current score to zero if user gets a one
+
+//                    computerTurn();
+                }
+
+            }
+        });
+
+    }
+
+    /**
+     * Resets all buttons to have a value of zero
+     */
+    private void resetButton()
+    {
+        // action listener for the reset button to do necessary action of resetting all scores
+        resetBtn.setOnClickListener( new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v) {
+
+                userOverallScore = 0;
+                usersTurnScore = 0;
+                computersOverallScore = 0;
+                computersTurnsScore = 0;
+
+                usersOverallScoreTxtVw.setText("User's Score: " + userOverallScore);
+
+                computersScoreTxtVw.setText("Computer's Score: " + computersOverallScore);
+
+                usersCurrentTurnsScoreTxtVw.setText("User's Current Turn Score: " + usersTurnScore);
+            }
+
+        });
+    }
+
+    /**
+     * Function for hold button
+     */
+    private void holdButton()
+    {
+        holdBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                userOverallScore += usersTurnScore; // adds the overall score to the user's score
+
+                usersTurnScore= 0;
+
+                usersOverallScoreTxtVw.setText("User's Score: " + userOverallScore);
+
+                usersCurrentTurnsScoreTxtVw.setText("User's Current Turn Score: " + usersTurnScore);
+
+                computerTurn();
+
+            }
+        });
+    }
+
+    /**
+     * Helper method for the computer's turn
+     */
+    private void computerTurn () {
+
+        Boolean compsTurn = true;
+        // Disable the roll and hold buttons
+
+        holdBtn.setEnabled(false);
+        rollBtn.setEnabled(false);
+
+        while (compsTurn)
+        {
+            int currRoll = rollDie();
+            computersTurnsScore += currRoll;
+
+            // if the roll is 1, current score for computer is zero and we don't add it to the overall score, and its the users turn
+            if (currRoll == 1) {
+                compsTurn = false;
+                computersTurnsScore = 0;
+            }
+
+            // if turn score is >= 20, hold
+            if( computersTurnsScore >= 20)
+            {
+                compsTurn = false;
+                computersOverallScore += computersTurnsScore;
+                computersScoreTxtVw.setText("Computer's Score: " + computersOverallScore);
+                computersTurnsScore = 0;
+            }
+
+
+        }
+
+        holdBtn.setEnabled(true);
+        rollBtn.setEnabled(true);
+
+        // Create a while loop to iterate over each rolled dice
+
+    }
+
+    /**
+     * Helper method for rolling functionality
+     * @return
+     */
+    private int rollDie()
         {
             int result = rand.nextInt(6) + 1;
             switch (result)
