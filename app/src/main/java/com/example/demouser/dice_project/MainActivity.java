@@ -226,6 +226,7 @@ public class MainActivity extends AppCompatActivity
                     computersScoreTxtVw.setText("Computer's Score: " + computersOverallScore);// status
                     resetBtn.setEnabled(true);
                     rollBtn.setEnabled(true);
+                    holdBtn.setEnabled(true);
                     computersTurnsScore = 0;
                 }
             }
