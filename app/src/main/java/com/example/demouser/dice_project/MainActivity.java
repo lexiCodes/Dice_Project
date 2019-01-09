@@ -12,6 +12,9 @@ import android.widget.ImageView;
 
 import java.util.Random;
 
+/**
+ * Class the has the game logic
+ */
 public class MainActivity extends AppCompatActivity
 {
 
@@ -20,7 +23,7 @@ public class MainActivity extends AppCompatActivity
     TextView usersOverallScoreTxtVw, computersScoreTxtVw, usersCurrentTurnsScoreTxtVw;
     Button rollBtn, holdBtn, resetBtn;
     Resources res;
-    Boolean yourTurn = false;
+    Boolean yourTurn = true;
 
     private int userOverallScore = 0;
 
@@ -32,6 +35,19 @@ public class MainActivity extends AppCompatActivity
 
     private int currRoll = 0;
 
+    private Runnable rollDice;
+    private Handler handler = new Handler();
+
+
+    private void refresh()
+    {
+
+    }
+
+    /**
+     * Constructor
+     * @param savedInstanceState
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -89,6 +105,9 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    /**
+     * Method for button to be rolled
+     */
     private void rollButton() {
 
         rollBtn.setOnClickListener(new View.OnClickListener()
@@ -175,39 +194,76 @@ public class MainActivity extends AppCompatActivity
     /**
      * Helper method for the computer's turn
      */
-    private void computerTurn () {
+    private void computerTurn ()
+    {
 
-        Boolean compsTurn = true;
+        rollBtn.setEnabled(false);
+        resetBtn.setEnabled(false);
+        holdBtn.setEnabled(false);
+
+        final int currRoll = rollDie();
+
+
+        rollDice = new Runnable()
+        {
+            @Override
+            public void run() {
+                if(computersTurnsScore < 20 && currRoll != 1)
+                {
+                    computersTurnsScore += currRoll;
+                    handler.postDelayed(this, 500);
+                }
+                else if(currRoll == 1)
+                {
+                    computersScoreTxtVw.setText("");// status
+                    computersTurnsScore = 0;
+                    resetBtn.setEnabled(true);
+                    rollBtn.setEnabled(true);
+
+                }
+                else {
+                    computersOverallScore += computersTurnsScore;
+                    computersScoreTxtVw.setText("Computer's Score: " + computersOverallScore);// status
+                    resetBtn.setEnabled(true);
+                    rollBtn.setEnabled(true);
+                    computersTurnsScore = 0;
+                }
+            }
+        };
+
+        handler.postDelayed(rollDice, 1000);
+
+//        Boolean compsTurn = true;
         // Disable the roll and hold buttons
 
-        holdBtn.setEnabled(false);
-        rollBtn.setEnabled(false);
+//        holdBtn.setEnabled(false);
+//        rollBtn.setEnabled(false);
 
-        while (compsTurn)
-        {
-            int currRoll = rollDie();
-            computersTurnsScore += currRoll;
+//        while (compsTurn)
+//        {
+//            int currRoll = rollDie();
+//            computersTurnsScore += currRoll;
 
             // if the roll is 1, current score for computer is zero and we don't add it to the overall score, and its the users turn
-            if (currRoll == 1) {
-                compsTurn = false;
-                computersTurnsScore = 0;
-            }
+//            if (currRoll == 1) {
+//                compsTurn = false;
+//                computersTurnsScore = 0;
+//            }
 
             // if turn score is >= 20, hold
-            if( computersTurnsScore >= 20)
-            {
-                compsTurn = false;
-                computersOverallScore += computersTurnsScore;
-                computersScoreTxtVw.setText("Computer's Score: " + computersOverallScore);
-                computersTurnsScore = 0;
-            }
+//            if( computersTurnsScore >= 20)
+//            {
+//                compsTurn = false;
+//                computersOverallScore += computersTurnsScore;
+//                computersScoreTxtVw.setText("Computer's Score: " + computersOverallScore);
+//                computersTurnsScore = 0;
+//            }
 
 
-        }
+//        }
 
-        holdBtn.setEnabled(true);
-        rollBtn.setEnabled(true);
+//        holdBtn.setEnabled(true);
+//        rollBtn.setEnabled(true);
 
         // Create a while loop to iterate over each rolled dice
 
